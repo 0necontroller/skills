@@ -9,7 +9,58 @@ Comprehensive guidelines, component architectures, and copy-paste-ready implemen
 
 ---
 
-## 1. Design System & Theme Foundations
+## 1. Prerequisites & shadcn/ui Component Installation
+
+Before generating or modifying any dashboard components, the AI agent MUST perform the following prerequisite checks:
+
+### Step 1: Verify shadcn/ui Setup (`components.json`)
+Check if `components.json` exists in the project root:
+- **If `components.json` is missing**: DO NOT attempt to write or install components blindly. Prompt the user:
+  > "shadcn/ui configuration (`components.json`) was not found in this project. Please initialize shadcn/ui first (e.g. `npx shadcn@latest init`) so that component directories and path aliases are properly configured."
+- **If `components.json` exists**: Proceed to component verification.
+
+### Step 2: Install Required shadcn/ui Components
+Check if the required primitives exist in your designated UI components directory (e.g., `@/components/ui/`). Run `npx shadcn@latest add <component>` for any missing components:
+
+```bash
+# Core Layout & Sidebar
+npx shadcn@latest add sidebar collapsible separator sheet tooltip avatar dropdown-menu
+
+# Page Header & Breadcrumbs
+npx shadcn@latest add breadcrumb badge button
+
+# Stats & Analytics Cards
+npx shadcn@latest add card skeleton
+
+# Date Filters
+npx shadcn@latest add popover calendar
+
+# Data Tables & Form Controls
+npx shadcn@latest add table input select
+```
+
+Or install all dashboard essentials in one command:
+```bash
+npx shadcn@latest add sidebar collapsible separator sheet tooltip avatar dropdown-menu breadcrumb badge button card skeleton popover calendar table input select
+```
+
+### Step 3: Verify & Install Core npm Packages
+All data tables in this skill are built with **TanStack Table (`@tanstack/react-table`)** combined with shadcn/ui `<Table>`. Ensure the following packages are present in `package.json`:
+
+* **`@tanstack/react-table`**: Table state management, column definitions, pagination, and sorting.
+* **`date-fns`**: Date parsing, formatting, and arithmetic for date filters.
+* **`lucide-react`**: Standard icon set.
+
+If missing, install them:
+```bash
+npm install @tanstack/react-table date-fns lucide-react
+# or: pnpm add @tanstack/react-table date-fns lucide-react
+# or: bun add @tanstack/react-table date-fns lucide-react
+```
+
+---
+
+## 2. Design System & Theme Foundations
 
 All dashboard components rely on semantic CSS variables and subtle, high-contrast visual tokens.
 
@@ -61,7 +112,7 @@ All dashboard components rely on semantic CSS variables and subtle, high-contras
 
 ---
 
-## 2. Admin Layout & Sidebar Architecture
+## 3. Admin Layout & Sidebar Architecture
 
 ### 2.1 Entry Point Layout (`app/admin/layout.tsx`)
 The root admin layout wraps pages in `SidebarProvider`, inserts the collapsible `AppSidebar`, and controls the header with mobile triggers.
@@ -292,7 +343,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
 
 ---
 
-## 3. Page Header, Breadcrumbs & Title Hierarchy
+## 4. Page Header, Breadcrumbs & Title Hierarchy
 
 Every page starts with a clean header row pairing hierarchical breadcrumbs, an accessible `<h1>` title, a subtitle, and an action/filter toolbar.
 
@@ -378,7 +429,7 @@ export function PageHeader({
 
 ---
 
-## 4. Stats Cards with Subtle Gradients
+## 5. Stats Cards with Subtle Gradients
 
 ### 4.1 The Gradient & Container Query Pattern
 To achieve a high-end look without visual clutter:
@@ -466,7 +517,7 @@ export function StatsGrid({
 
 ---
 
-## 5. Date Filter Systems
+## 6. Date Filter Systems
 
 ### Pattern A: Quick Preset Buttons + Popover Picker
 Best for executive dashboards that alternate between today, yesterday, and specific historical dates.
@@ -683,9 +734,9 @@ export function DateRangeFilter({
 
 ---
 
-## 6. High-Performance Data Tables
+## 7. High-Performance Data Tables (TanStack Table + shadcn)
 
-Combines `@tanstack/react-table` with shadcn `<Table>`, debounced search, facet filters, status pill badges, and pagination footer.
+All dashboard data tables are built with **TanStack Table (`@tanstack/react-table`)** for headless state (sorting, filtering, pagination) and **shadcn `<Table>`** for styled presentation. Always combine with debounced search, facet select filters, status pill badges, and pagination footer.
 
 ```tsx
 'use client';
@@ -909,7 +960,7 @@ export function DashboardDataTable<TData, TValue>({
 
 ---
 
-## 7. Status Pill Badges Palette
+## 8. Status Pill Badges Palette
 
 Maintain visual hierarchy across states using outline badges with semi-transparent tinted backgrounds:
 
@@ -944,9 +995,12 @@ export const STATUS_VARIANTS: Record<string, { label: string; className: string 
 
 ---
 
-## 8. Development Checklist
+## 9. Development Checklist
 
 When creating a new dashboard view, ensure:
+- [ ] Check for `components.json` in the root. If missing, prompt user to initialize shadcn/ui.
+- [ ] Ensure required shadcn components are installed via `npx shadcn@latest add <component>`.
+- [ ] Ensure `@tanstack/react-table`, `date-fns`, and `lucide-react` are installed in `package.json`.
 - [ ] Root uses `<SidebarProvider>` + `<SidebarInset>` with mobile trigger header.
 - [ ] Top of page includes `<Breadcrumb>` navigation and clear `<h1>` + `<p className="text-muted-foreground">` subtitle.
 - [ ] Stats cards include `data-slot="card"` with subtle upward gradient `*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card`.
