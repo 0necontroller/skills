@@ -1,11 +1,11 @@
 ---
 name: dashboard-ui
-description: Design systems, layout architecture, subtle gradient stats cards, collapsible sidebars, breadcrumbs, date filters, and TanStack data tables for modern dashboards.
+description: Design systems, layout architecture, grouped white sidebars with high-contrast active states, top bar with center logo and user role badge, and TanStack data tables with dedicated View buttons and three-dot immediate action menus.
 ---
 
 # Dashboard UI Skill
 
-Comprehensive guidelines, component architectures, and copy-paste-ready implementation patterns for building high-end, responsive administrative and analytics dashboards with Next.js (App Router), Tailwind CSS (v3 or v4), and shadcn/ui.
+Comprehensive guidelines, component architectures, and copy-paste-ready implementation patterns for building high-end, responsive administrative and operational dashboards with React, Next.js / React Router, Tailwind CSS, and shadcn/ui.
 
 ---
 
@@ -49,20 +49,20 @@ All data tables in this skill are built with **TanStack Table (`@tanstack/react-
 
 * **`@tanstack/react-table`**: Table state management, column definitions, pagination, and sorting.
 * **`date-fns`**: Date parsing, formatting, and arithmetic for date filters.
-* **`lucide-react`**: Standard icon set.
+* **`@tabler/icons-react`** or **`lucide-react`**: Standard icon set.
 
 If missing, install them:
 ```bash
-npm install @tanstack/react-table date-fns lucide-react
-# or: pnpm add @tanstack/react-table date-fns lucide-react
-# or: bun add @tanstack/react-table date-fns lucide-react
+npm install @tanstack/react-table date-fns @tabler/icons-react
+# or: pnpm add @tanstack/react-table date-fns @tabler/icons-react
+# or: bun add @tanstack/react-table date-fns @tabler/icons-react
 ```
 
 ---
 
 ## 2. Design System & Theme Foundations
 
-All dashboard components rely on semantic CSS variables and subtle, high-contrast visual tokens.
+All dashboard components rely on semantic CSS variables, a crisp white sidebar canvas, and subtle, high-contrast visual tokens.
 
 ### Theme Tokens (`globals.css`)
 ```css
@@ -73,77 +73,102 @@ All dashboard components rely on semantic CSS variables and subtle, high-contras
   --card-foreground: 0 0% 3.9%;
   --popover: 0 0% 100%;
   --popover-foreground: 0 0% 3.9%;
-  --primary: 330 43% 46%;
-  --primary-foreground: 0 0% 98%;
-  --muted: 0 0% 96.1%;
-  --muted-foreground: 0 0% 45.1%;
-  --border: 0 0% 89.8%;
-  --radius: 0.5rem;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 24.6 95% 53.1%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --border: 214.3 31.8% 91.4%;
+  --radius: 0.625rem;
 
-  /* Sidebar Tokens */
-  --sidebar: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(240 5.3% 26.1%);
-  --sidebar-primary: hsl(240 5.9% 10%);
-  --sidebar-primary-foreground: hsl(0 0% 98%);
-  --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --sidebar-border: hsl(220 13% 91%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  /* Clean White Sidebar Tokens */
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 222.2 47.4% 11.2%;
+  --sidebar-primary: 221.2 83.2% 53.3%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 210 40% 96.1%;
+  --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+  --sidebar-border: 214.3 31.8% 91.4%;
+  --sidebar-ring: 221.2 83.2% 53.3%;
 }
 
 .dark {
-  --background: 0 0% 3.9%;
-  --foreground: 0 0% 98%;
-  --card: 0 0% 3.9%;
-  --card-foreground: 0 0% 98%;
-  --muted: 0 0% 14.9%;
-  --muted-foreground: 0 0% 63.9%;
-  --border: 0 0% 14.9%;
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --border: 217.2 32.6% 17.5%;
 
   /* Dark Sidebar Tokens */
-  --sidebar: hsl(240 5.9% 10%);
-  --sidebar-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-primary: hsl(224.3 76.3% 48%);
-  --sidebar-accent: hsl(240 3.7% 15.9%);
-  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-border: hsl(240 3.7% 15.9%);
+  --sidebar: 222.2 84% 4.9%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 217.2 91.2% 59.8%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 217.2 32.6% 17.5%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 217.2 32.6% 17.5%;
 }
 ```
 
 ---
 
-## 3. Admin Layout & Sidebar Architecture
+## 3. Dashboard Content Layout (`DashboardLayout.tsx`)
 
-### 2.1 Entry Point Layout (`app/admin/layout.tsx`)
-The root admin layout wraps pages in `SidebarProvider`, inserts the collapsible `AppSidebar`, and controls the header with mobile triggers.
+The dashboard layout orchestrates the overall workspace:
+1. **Collapsible Trigger on the Left**: An accessible `<SidebarTrigger />` for toggling the sidebar dock.
+2. **Brand Logo Centered**: The platform logo positioned prominently in the center of the header bar.
+3. **User Role Badge on the Right**: An uppercase monospace badge indicating the authenticated user's authorization tier (e.g., `SYSTEM ADMINISTRATOR`).
+4. **Muted Canvas Inset**: Main content wrapped in `<SidebarInset className="bg-muted/15 min-h-screen">` providing subtle separation from white cards and tables.
 
 ```tsx
-import { AppSidebar } from '@/components/admin/sidebar/app-sidebar';
+import { Outlet } from "react-router"; // or { children } for Next.js App Router
+import { DashboardSidebar } from "./DashboardSidebar";
 import {
   SidebarInset,
   SidebarProvider,
-  SidebarTrigger
-} from '@/components/ui/sidebar';
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { Badge } from "@/components/ui/badge";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export function DashboardLayout({ children }: { children?: React.ReactNode }) {
+  const { user, role } = useCurrentUser();
+
   return (
     <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        {/* Mobile Header: fixed top blur on small screens, transparent on desktop */}
-        <header className="bg-background/95 fixed top-0 right-0 left-0 z-20 flex h-16 shrink-0 items-center gap-2 border-b shadow-xs backdrop-blur transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:static md:border-none md:bg-transparent md:shadow-none">
-          <div className="flex w-full items-center justify-between gap-2 px-4">
+      <DashboardSidebar />
+      <SidebarInset className="bg-muted/15 min-h-screen">
+        {/* Header: fixed blur on mobile, clean integrated top bar on desktop */}
+        <header className="fixed top-0 right-0 left-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-4 shadow-xs backdrop-blur transition-[width,height] ease-linear md:static md:h-14 md:border-none md:bg-transparent md:px-6 md:shadow-none">
+          <div className="flex w-full items-center justify-between gap-2">
+            {/* 1. Left: Sidebar Collapse Trigger */}
             <SidebarTrigger className="-ml-1" />
-            <div className="font-semibold text-sm tracking-tight md:hidden">
-              Admin Portal
+
+            {/* 2. Center: Brand Logo */}
+            <div className="flex items-center gap-2 text-sm font-semibold tracking-tight">
+              <img src="/logo.png" alt="Platform Logo" className="w-24 object-contain" />
             </div>
-            <div className="w-8 md:hidden" />
+
+            {/* 3. Right: User Role Pill Badge */}
+            {role ? (
+              <Badge
+                variant="outline"
+                className="text-secondary bg-secondary/10 border-secondary uppercase font-mono px-3 py-1.5 text-xs font-semibold"
+              >
+                {role.replace(/_/g, " ")}
+              </Badge>
+            ) : (
+              <div className="w-8" />
+            )}
           </div>
         </header>
 
         {/* Main Content Area */}
-        <main className="flex flex-1 flex-col gap-4 p-4 pt-20 md:pt-0">
-          {children}
+        <main className="flex flex-1 flex-col gap-6 p-4 pt-18 md:p-6 md:pt-0">
+          {children || <Outlet />}
         </main>
       </SidebarInset>
     </SidebarProvider>
@@ -151,80 +176,251 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 }
 ```
 
-### 2.2 App Sidebar (`components/admin/sidebar/app-sidebar.tsx`)
-Uses `variant="inset"` with `collapsible="icon"` for collapsing down to an icon-only dock.
+---
+
+## 4. Grouped Sidebar Architecture (`DashboardSidebar.tsx`)
+
+The dashboard sidebar provides role-tailored navigation with:
+* **Clean White Background**: Structured with `variant="inset"` and `collapsible="icon"`.
+* **Grouped Sections**: Navigation items categorized under domain-specific headers (e.g., `WORKSPACE`, `DATA MANAGEMENT`, `QUALITY ASSURANCE`, `ADMINISTRATION`) using uppercase tracking-wider labels.
+* **High-Contrast Active Indicator**: Active links use `bg-primary text-primary-foreground font-medium hover:bg-primary hover:text-primary-foreground` to provide unambiguous visual orientation.
+* **Notification Pill Counters**: Display real-time pending action counts with dynamic badge variants (`variant={active ? "outline" : "secondary"}`).
+* **Footer Profile & Portal Actions**: Includes quick navigation back to the public-facing portal, user avatar with initials fallback, user name/email, and a single-click sign-out action.
 
 ```tsx
-'use client';
-
+import { Link, useLocation } from "react-router"; // or next/link and next/navigation
 import {
-  PieChart,
-  ShoppingBag,
-  Users,
-  Settings2,
-  Package
-} from 'lucide-react';
+  IconArrowLeft,
+  IconBookmark,
+  IconChartPie,
+  IconCpu,
+  IconDatabase,
+  IconHistory,
+  IconLayoutDashboard,
+  IconLogout,
+  IconServer,
+  IconSettings,
+  IconShieldCheck,
+  IconUpload,
+  IconUser,
+  IconUsers,
+} from "@tabler/icons-react";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
-  SidebarRail
-} from '@/components/ui/sidebar';
-import { NavMain } from './nav-main';
-import { NavUser } from './nav-user';
-import { TeamSwitcher } from './team-switcher';
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+} from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
-const navData = [
-  {
-    title: 'Dashboard',
-    url: '/admin',
-    icon: PieChart,
-    items: [{ title: 'Overview', url: '/admin' }]
-  },
-  {
-    title: 'Orders',
-    url: '/admin/orders',
-    icon: ShoppingBag,
-    items: [
-      { title: 'All Orders', url: '/admin/orders' },
-      { title: 'Transactions', url: '/admin/orders/transactions' }
-    ]
-  },
-  {
-    title: 'Inventory',
-    url: '/admin/inventory',
-    icon: Package,
-    items: [
-      { title: 'Products', url: '/admin/inventory/products' },
-      { title: 'Low Stock', url: '/admin/inventory/low-stock' }
-    ]
-  },
-  {
-    title: 'Users',
-    url: '/admin/users',
-    icon: Users,
-    items: [{ title: 'Customers', url: '/admin/users' }]
-  },
-  {
-    title: 'Settings',
-    url: '/admin/settings',
-    icon: Settings2,
-    items: [{ title: 'General', url: '/admin/settings' }]
+interface NavItem {
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+  exact?: boolean;
+  count?: number;
+}
+
+interface NavSection {
+  label: string;
+  items: NavItem[];
+}
+
+export function DashboardSidebar(props: React.ComponentProps<typeof Sidebar>) {
+  const location = useLocation();
+  const { user, role, canUpload, canReview, canManageUsers, canManageDatasets, isSysAdmin, signOut } =
+    useCurrentUser();
+
+  const isItemActive = (url: string, exact?: boolean) => {
+    if (exact) return location.pathname === url;
+    return location.pathname === url || location.pathname.startsWith(`${url}/`);
+  };
+
+  const initials = user
+    ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() || "U"
+    : "U";
+
+  // Build role-tailored navigation sections
+  const sections: NavSection[] = [
+    {
+      label: "Workspace",
+      items: [
+        { title: "Overview", url: "/dashboard", icon: IconLayoutDashboard, exact: true },
+        { title: "Saved Bookmarks", url: "/dashboard/saved", icon: IconBookmark },
+        { title: "My Profile", url: "/dashboard/profile", icon: IconUser },
+      ],
+    },
+  ];
+
+  if (canUpload) {
+    sections.push({
+      label: "Data Management",
+      items: [
+        { title: "Upload Dataset", url: "/dashboard/upload", icon: IconUpload },
+        { title: "My Datasets", url: "/dashboard/my-datasets", icon: IconDatabase },
+      ],
+    });
   }
-];
 
-export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
+  if (canReview) {
+    sections.push({
+      label: "Quality Assurance",
+      items: [
+        {
+          title: "Moderation Queue",
+          url: "/dashboard/moderation",
+          icon: IconShieldCheck,
+          count: 3, // dynamic pending review counter
+        },
+      ],
+    });
+  }
+
+  const adminItems: NavItem[] = [];
+  if (canManageDatasets) {
+    adminItems.push({ title: "Datasets", url: "/dashboard/datasets", icon: IconDatabase });
+  }
+  if (canManageUsers) {
+    adminItems.push({ title: "User Management", url: "/dashboard/users", icon: IconUsers });
+  }
+  if (isSysAdmin) {
+    adminItems.push({ title: "System Health", url: "/dashboard/system-health", icon: IconServer });
+    adminItems.push({ title: "System Settings", url: "/dashboard/settings", icon: IconSettings });
+  }
+  adminItems.push({ title: "Audit Logs", url: "/dashboard/audit-logs", icon: IconHistory });
+
+  if (adminItems.length > 0) {
+    sections.push({
+      label: "Administration",
+      items: adminItems,
+    });
+  }
+
   return (
-    <Sidebar variant="inset" collapsible="icon" {...props}>
+    <Sidebar variant="inset" collapsible="icon" className="bg-card border-r" {...props}>
+      {/* Brand Header */}
       <SidebarHeader>
-        <TeamSwitcher />
+        <div className="flex items-center gap-3 px-2 py-2">
+          <img
+            src="/favicon.png"
+            alt="Logo"
+            className="size-8 shrink-0 rounded-md object-contain"
+          />
+          <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+            <span className="truncate font-semibold tracking-tight text-foreground">
+              Portal Workspace
+            </span>
+            <span className="truncate text-xs text-muted-foreground">
+              Operational Management
+            </span>
+          </div>
+        </div>
       </SidebarHeader>
+
+      {/* Grouped Navigation Sections */}
       <SidebarContent>
-        <NavMain items={navData} />
+        {sections.map((section) => (
+          <SidebarGroup key={section.label}>
+            <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/75">
+              {section.label}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {section.items.map((item) => {
+                  const active = isItemActive(item.url, item.exact);
+                  const Icon = item.icon;
+                  return (
+                    <SidebarMenuItem key={item.url}>
+                      <SidebarMenuButton
+                        isActive={active}
+                        tooltip={item.title}
+                        className={
+                          active
+                            ? "bg-primary text-primary-foreground font-medium hover:bg-primary hover:text-primary-foreground"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }
+                        render={
+                          <Link to={item.url} className="flex items-center gap-2.5 w-full">
+                            <Icon className="size-4 shrink-0" />
+                            <span className="truncate flex-1">{item.title}</span>
+                            {item.count !== undefined && item.count > 0 && (
+                              <Badge
+                                variant={active ? "outline" : "secondary"}
+                                className="ml-auto text-[10px] font-mono h-4 min-w-4 px-1 flex items-center justify-center rounded-full"
+                              >
+                                {item.count}
+                              </Badge>
+                            )}
+                          </Link>
+                        }
+                      />
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={{ name: 'Admin', email: 'admin@company.com' }} />
+
+      {/* Footer Profile & Actions */}
+      <SidebarFooter className="border-t bg-card">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Public Portal"
+              render={
+                <Link
+                  to="/"
+                  className="flex items-center gap-2.5 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  <IconArrowLeft className="size-4" />
+                  <span>Public Portal</span>
+                </Link>
+              }
+            />
+          </SidebarMenuItem>
+
+          <SidebarMenuItem>
+            <div className="flex items-center gap-2 p-2 group-data-[collapsible=icon]:p-0">
+              <Link
+                to="/dashboard/profile"
+                className="flex items-center gap-2 flex-1 min-w-0 hover:opacity-80 transition-opacity"
+              >
+                <Avatar className="size-8">
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="grid flex-1 text-left text-xs leading-tight group-data-[collapsible=icon]:hidden">
+                  <span className="truncate font-semibold text-foreground">
+                    {user ? `${user.firstName} ${user.lastName}` : "User"}
+                  </span>
+                  <span className="truncate text-[11px] text-muted-foreground">
+                    {user?.email}
+                  </span>
+                </div>
+              </Link>
+              <button
+                type="button"
+                onClick={signOut}
+                className="text-muted-foreground hover:text-rose-600 transition-colors p-1 rounded-md hover:bg-rose-500/10 group-data-[collapsible=icon]:hidden cursor-pointer"
+                title="Sign out"
+              >
+                <IconLogout className="size-4" />
+              </button>
+            </div>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
@@ -232,118 +428,9 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 }
 ```
 
-### 2.3 Collapsible Nav with Active State & Counter Pills (`nav-main.tsx`)
-Highlights active links, rotates chevrons smoothly, and shows notification counters with `tabular-nums`.
-
-```tsx
-'use client';
-
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { ChevronRight, type LucideIcon } from 'lucide-react';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger
-} from '@/components/ui/collapsible';
-import {
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem
-} from '@/components/ui/sidebar';
-
-interface NavItem {
-  title: string;
-  url: string;
-  icon?: LucideIcon;
-  count?: number;
-  items?: { title: string; url: string; count?: number }[];
-}
-
-export function NavMain({ items }: { items: NavItem[] }) {
-  const pathname = usePathname();
-
-  const isPathActive = (target: string) => {
-    if (!target) return false;
-    if (pathname === target) return true;
-    if (target === '/admin') return false;
-    return pathname.startsWith(`${target}/`);
-  };
-
-  return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
-      <SidebarMenu>
-        {items.map((item) => {
-          const subItemActive = item.items?.some((s) => isPathActive(s.url));
-          const isActive = subItemActive || isPathActive(item.url);
-
-          return (
-            <Collapsible
-              key={item.title}
-              asChild
-              defaultOpen={isActive}
-              className="group/collapsible"
-            >
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton tooltip={item.title} isActive={isActive}>
-                    {item.icon && <item.icon />}
-                    <span>{item.title}</span>
-                    {item.count && item.count > 0 && (
-                      <span className="bg-primary/10 text-primary mr-1 ml-auto flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums">
-                        {item.count}
-                      </span>
-                    )}
-                    <ChevronRight
-                      className={`transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 ${
-                        item.count ? '' : 'ml-auto'
-                      }`}
-                    />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    {item.items?.map((subItem) => {
-                      const subIsActive = isPathActive(subItem.url);
-                      return (
-                        <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton asChild isActive={subIsActive}>
-                            <Link
-                              href={subItem.url}
-                              className="flex w-full items-center justify-between"
-                            >
-                              <span>{subItem.title}</span>
-                              {subItem.count && subItem.count > 0 && (
-                                <span className="bg-primary ml-auto flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium text-white tabular-nums">
-                                  {subItem.count}
-                                </span>
-                              )}
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      );
-                    })}
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
-          );
-        })}
-      </SidebarMenu>
-    </SidebarGroup>
-  );
-}
-```
-
 ---
 
-## 4. Page Header, Breadcrumbs & Title Hierarchy
+## 5. Page Header, Breadcrumbs & Title Hierarchy
 
 Every page starts with a clean header row pairing hierarchical breadcrumbs, an accessible `<h1>` title, a subtitle, and an action/filter toolbar.
 
@@ -429,12 +516,11 @@ export function PageHeader({
 
 ---
 
-## 5. Stats Cards with Subtle Gradients
+## 6. Stats Cards with Subtle Gradients
 
-### 4.1 The Gradient & Container Query Pattern
-To achieve a high-end look without visual clutter:
+### Gradient & Container Query Pattern
 1. Apply the parent wildcard selector `*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:bg-gradient-to-t` in light mode.
-2. Fall back to `dark:*:data-[slot=card]:bg-card` for clean, matte dark mode cards.
+2. Fall back to `dark:*:data-[slot=card]:bg-card` for clean dark mode cards.
 3. Add `@container/card` on the card to scale title typography dynamically (`@[250px]/card:text-3xl`).
 4. Display trend indicators via absolute badges in top-right.
 
@@ -517,11 +603,9 @@ export function StatsGrid({
 
 ---
 
-## 6. Date Filter Systems
+## 7. Date Filter Systems
 
-### Pattern A: Quick Preset Buttons + Popover Picker
-Best for executive dashboards that alternate between today, yesterday, and specific historical dates.
-
+### Quick Preset Buttons + Popover Picker
 ```tsx
 'use client';
 
@@ -605,138 +689,182 @@ export function QuickDateFilter({
 }
 ```
 
-### Pattern B: Date Range Traverser (`DateRangeFilter`)
-Best for reports and transaction ledgers with month-by-month traversal buttons (`ChevronLeft`, `ChevronRight`).
+---
+
+## 8. Data Tables with Dedicated "View" Button & Three-Dot Immediate Action Menu
+
+All operational data tables MUST implement the **Two-Tier Action Column Pattern**:
+
+1. **Immediate Primary Action (Dedicated "View" Button)**:
+   * Always visible directly in the table row.
+   * Uses `variant="outline"`, `size="sm"`, with an eye icon (`IconEye`).
+   * One click immediately navigates to the dedicated full-page view (e.g. `/dashboard/datasets/:id` or `/dashboard/users/:id`).
+2. **Three-Dot Quick Actions Menu (`DropdownMenu`)**:
+   * Uses `IconDots` / `MoreHorizontal` inside a ghost icon button.
+   * **Immediate Actions**: Place instant operations right at the top (e.g., Quick Edit, Status Transitions like Approve / Publish / Suspend / Activate, Access Toggles).
+   * **Destructive Actions**: Separated by `<DropdownMenuSeparator />` at the bottom (e.g., Delete with confirmation prompt).
+
+### 8.1 Action Column Definition Example
 
 ```tsx
-'use client';
-
-import { useState } from 'react';
-import { format, subMonths, addMonths } from 'date-fns';
-import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { ColumnDef } from '@tanstack/react-table';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover';
+  IconEye,
+  IconDots,
+  IconEdit,
+  IconCheck,
+  IconShieldCheck,
+  IconTrash,
+  IconUserCheck,
+  IconUserX,
+  IconExternalLink,
+} from '@tabler/icons-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
-export function DateRangeFilter({
-  rangeStart,
-  rangeEnd,
-  onRangeChange
-}: {
-  rangeStart: Date | undefined;
-  rangeEnd: Date | undefined;
-  onRangeChange: (start: Date | undefined, end: Date | undefined) => void;
-}) {
-  const [startOpen, setStartOpen] = useState(false);
-  const [endOpen, setEndOpen] = useState(false);
+export interface ResourceRow {
+  id: string;
+  name: string;
+  status: 'PENDING' | 'ACTIVE' | 'ARCHIVED';
+  ownerEmail: string;
+}
 
-  const handlePrev = () => {
-    const s = rangeStart || new Date();
-    const e = rangeEnd || new Date();
-    onRangeChange(subMonths(s, 1), subMonths(e, 1));
-  };
+export function createResourceColumns(actions: {
+  onView: (id: string) => void;
+  onEdit: (row: ResourceRow) => void;
+  onApprove?: (id: string) => void;
+  onToggleStatus?: (id: string, currentStatus: string) => void;
+  onDelete: (id: string, name: string) => void;
+}): ColumnDef<ResourceRow>[] {
+  return [
+    {
+      accessorKey: 'name',
+      header: 'Resource Name',
+      cell: ({ row }) => (
+        <span className="font-semibold text-foreground">{row.original.name}</span>
+      ),
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => {
+        const status = row.original.status;
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+            {status}
+          </span>
+        );
+      },
+    },
+    // The Two-Tier Action Column
+    {
+      id: 'actions',
+      header: () => <div className="text-right">Actions</div>,
+      cell: ({ row }) => {
+        const item = row.original;
 
-  const handleNext = () => {
-    const s = rangeStart || new Date();
-    const e = rangeEnd || new Date();
-    const nextEnd = addMonths(e, 1);
-    const today = new Date();
-    onRangeChange(addMonths(s, 1), nextEnd > today ? today : nextEnd);
-  };
-
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Button
-        variant={!rangeStart && !rangeEnd ? 'default' : 'outline'}
-        size="sm"
-        onClick={() => onRangeChange(undefined, undefined)}
-        className="h-8 text-xs font-medium"
-      >
-        All Time
-      </Button>
-
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={handlePrev}
-        className="h-8 w-8"
-        title="Previous Month"
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
-
-      <div className="flex items-center gap-1.5">
-        <Popover open={startOpen} onOpenChange={setStartOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 min-w-[110px] text-xs font-normal">
-              <CalendarIcon className="text-muted-foreground mr-1.5 h-3.5 w-3.5" />
-              {rangeStart ? format(rangeStart, 'MMM d, yyyy') : 'Start Date'}
+        return (
+          <div className="flex items-center justify-end gap-1.5">
+            {/* 1. Dedicated View Button: Opens into dedicated full page */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2.5 text-xs font-medium gap-1.5 hover:bg-muted"
+              onClick={() => actions.onView(item.id)}
+            >
+              <IconEye className="size-3.5 text-primary" />
+              <span>View</span>
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="p-0" align="center">
-            <Calendar
-              mode="single"
-              selected={rangeStart}
-              onSelect={(d) => {
-                if (d) {
-                  onRangeChange(d, rangeEnd || d);
-                  setStartOpen(false);
-                }
-              }}
-              disabled={(d) => d > new Date()}
-            />
-          </PopoverContent>
-        </Popover>
 
-        <span className="text-muted-foreground text-xs font-medium">to</span>
+            {/* 2. Three-Dot Actions Menu: Immediate in-place actions & deletion */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 text-muted-foreground hover:text-foreground"
+                  aria-label="More actions"
+                >
+                  <IconDots className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 text-xs">
+                {/* Secondary Navigation */}
+                <DropdownMenuItem
+                  onClick={() => actions.onView(item.id)}
+                  className="cursor-pointer"
+                >
+                  <IconEye className="mr-2 size-3.5 text-primary" />
+                  View Full Details
+                </DropdownMenuItem>
 
-        <Popover open={endOpen} onOpenChange={setEndOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 min-w-[110px] text-xs font-normal">
-              <CalendarIcon className="text-muted-foreground mr-1.5 h-3.5 w-3.5" />
-              {rangeEnd ? format(rangeEnd, 'MMM d, yyyy') : 'End Date'}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="p-0" align="center">
-            <Calendar
-              mode="single"
-              selected={rangeEnd}
-              onSelect={(d) => {
-                if (d) {
-                  onRangeChange(rangeStart || d, d);
-                  setEndOpen(false);
-                }
-              }}
-              disabled={(d) => d > new Date() || (rangeStart ? d < rangeStart : false)}
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
+                {/* Immediate In-Place Action: Quick Edit */}
+                <DropdownMenuItem
+                  onClick={() => actions.onEdit(item)}
+                  className="cursor-pointer"
+                >
+                  <IconEdit className="mr-2 size-3.5 text-muted-foreground" />
+                  Quick Edit
+                </DropdownMenuItem>
 
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={handleNext}
-        disabled={rangeEnd ? rangeEnd >= new Date() : true}
-        className="h-8 w-8"
-        title="Next Month"
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
-    </div>
-  );
+                {/* Immediate Status Transition: Approve / Publish */}
+                {item.status === 'PENDING' && actions.onApprove && (
+                  <DropdownMenuItem
+                    onClick={() => actions.onApprove?.(item.id)}
+                    className="cursor-pointer text-emerald-600 dark:text-emerald-400 font-medium"
+                  >
+                    <IconCheck className="mr-2 size-3.5" />
+                    Approve & Publish
+                  </DropdownMenuItem>
+                )}
+
+                {/* Immediate Status Toggle: Suspend / Activate */}
+                {actions.onToggleStatus && (
+                  <DropdownMenuItem
+                    onClick={() => actions.onToggleStatus?.(item.id, item.status)}
+                    className="cursor-pointer"
+                  >
+                    {item.status === 'ACTIVE' ? (
+                      <>
+                        <IconUserX className="mr-2 size-3.5 text-amber-500" />
+                        Suspend Account
+                      </>
+                    ) : (
+                      <>
+                        <IconUserCheck className="mr-2 size-3.5 text-emerald-500" />
+                        Activate Account
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuSeparator />
+
+                {/* Destructive Action: Permanent Delete */}
+                <DropdownMenuItem
+                  onClick={() => actions.onDelete(item.id, item.name)}
+                  className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                >
+                  <IconTrash className="mr-2 size-3.5" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      },
+    },
+  ];
 }
 ```
 
----
-
-## 7. High-Performance Data Tables (TanStack Table + shadcn)
-
-All dashboard data tables are built with **TanStack Table (`@tanstack/react-table`)** for headless state (sorting, filtering, pagination) and **shadcn `<Table>`** for styled presentation. Always combine with debounced search, facet select filters, status pill badges, and pagination footer.
+### 8.2 Full Data Table Component (`DashboardDataTable.tsx`)
 
 ```tsx
 'use client';
@@ -746,18 +874,17 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  useReactTable
+  useReactTable,
 } from '@tanstack/react-table';
-import { Search, X, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from '@/components/ui/select';
 import {
   Table,
@@ -765,7 +892,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from '@/components/ui/table';
 
 interface DataTableProps<TData, TValue> {
@@ -797,12 +924,12 @@ export function DashboardDataTable<TData, TValue>({
   statusFilter,
   onStatusFilterChange,
   statusOptions,
-  isLoading
+  isLoading,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
-    getCoreRowModel: getCoreRowModel()
+    getCoreRowModel: getCoreRowModel(),
   });
 
   const totalPages = Math.ceil(total / pageSize) || 1;
@@ -818,7 +945,7 @@ export function DashboardDataTable<TData, TValue>({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={searchPlaceholder}
-            className="bg-card pr-9 pl-9 shadow-none"
+            className="bg-card pr-9 pl-9 shadow-none text-xs"
           />
           {searchQuery && (
             <Button
@@ -834,13 +961,13 @@ export function DashboardDataTable<TData, TValue>({
 
         {statusOptions && onStatusFilterChange && (
           <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-            <SelectTrigger className="w-full bg-card shadow-none sm:w-[170px]">
+            <SelectTrigger className="w-full bg-card shadow-none sm:w-[170px] text-xs">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
               {statusOptions.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
+                <SelectItem key={opt.value} value={opt.value} className="text-xs">
                   {opt.label}
                 </SelectItem>
               ))}
@@ -896,7 +1023,7 @@ export function DashboardDataTable<TData, TValue>({
                   className="hover:bg-muted/30 transition-colors"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="py-3">
+                    <TableCell key={cell.id} className="py-2.5 text-xs">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -916,7 +1043,7 @@ export function DashboardDataTable<TData, TValue>({
         </Table>
 
         {/* Integrated Pagination Footer */}
-        <div className="border-border/60 bg-muted/20 text-muted-foreground flex items-center justify-between border-t px-4 py-3 text-xs">
+        <div className="border-border/60 bg-muted/20 text-muted-foreground flex items-center justify-between border-t px-4 py-2.5 text-xs">
           <div>
             Showing{' '}
             <span className="text-foreground font-medium">
@@ -934,9 +1061,9 @@ export function DashboardDataTable<TData, TValue>({
               size="sm"
               onClick={() => onPageChange(Math.max(1, page - 1))}
               disabled={page <= 1 || isLoading}
-              className="h-8 w-8 p-0"
+              className="h-7 w-7 p-0"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
             <span className="text-foreground text-xs font-medium">
               Page {page} of {totalPages}
@@ -946,9 +1073,9 @@ export function DashboardDataTable<TData, TValue>({
               size="sm"
               onClick={() => onPageChange(Math.min(totalPages, page + 1))}
               disabled={page >= totalPages || isLoading}
-              className="h-8 w-8 p-0"
+              className="h-7 w-7 p-0"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
@@ -960,7 +1087,7 @@ export function DashboardDataTable<TData, TValue>({
 
 ---
 
-## 8. Status Pill Badges Palette
+## 9. Status Pill Badges Palette
 
 Maintain visual hierarchy across states using outline badges with semi-transparent tinted backgrounds:
 
@@ -995,16 +1122,25 @@ export const STATUS_VARIANTS: Record<string, { label: string; className: string 
 
 ---
 
-## 9. Development Checklist
+## 10. Development Checklist
 
-When creating a new dashboard view, ensure:
-- [ ] Check for `components.json` in the root. If missing, prompt user to initialize shadcn/ui.
-- [ ] Ensure required shadcn components are installed via `npx shadcn@latest add <component>`.
-- [ ] Ensure `@tanstack/react-table`, `date-fns`, and `lucide-react` are installed in `package.json`.
-- [ ] Root uses `<SidebarProvider>` + `<SidebarInset>` with mobile trigger header.
-- [ ] Top of page includes `<Breadcrumb>` navigation and clear `<h1>` + `<p className="text-muted-foreground">` subtitle.
-- [ ] Stats cards include `data-slot="card"` with subtle upward gradient `*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card`.
-- [ ] Metric numbers use `tabular-nums` for clean digit alignment.
-- [ ] Tables are wrapped in `border-border/60 bg-card overflow-hidden rounded-xl border shadow-xs`.
-- [ ] Table headers use `bg-muted/40` and rows feature `hover:bg-muted/30`.
-- [ ] Date filters support quick presets and popover constraint boundaries (`disabled={(d) => d > new Date()}`).
+When creating or upgrading a dashboard view, ensure:
+- [ ] **Components Config**: Check for `components.json`. If missing, prompt user to initialize shadcn/ui.
+- [ ] **Dependencies**: Ensure `@tanstack/react-table`, `date-fns`, and `@tabler/icons-react` / `lucide-react` are installed.
+- [ ] **Content Layout**:
+  - Root uses `<SidebarProvider>` wrapping the sidebar and `<SidebarInset className="bg-muted/15 min-h-screen">`.
+  - Header features `<SidebarTrigger className="-ml-1" />` on the left.
+  - Centered brand logo (`<img src="/logo.png" />`).
+  - Right-aligned uppercase monospace role pill badge (`<Badge variant="outline" className="text-secondary bg-secondary/10 border-secondary uppercase font-mono px-3 py-1.5">{role}</Badge>`).
+  - Main container has `p-4 pt-18 md:p-6 md:pt-0 flex flex-1 flex-col gap-6`.
+- [ ] **Sidebar Design**:
+  - Crisp white background (`bg-card border-r`).
+  - Grouped navigation sections with uppercase labels (`SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/75"`).
+  - High-contrast active indicators (`bg-primary text-primary-foreground font-medium`).
+  - Dynamic pending notification pill badges on items.
+  - Profile footer featuring user avatar, initials fallback, name, email, and quick logout icon button.
+- [ ] **Table Action Pattern**:
+  - Dedicated **"View"** button (`variant="outline"`, `size="sm"`, `IconEye`) directly visible in every row, opening into a dedicated detail/edit page.
+  - Three-dot menu (`DropdownMenu` / `IconDots`) containing immediate in-place operations (quick edit, status transitions, toggles) and separated destructive delete actions.
+- [ ] **Table Visuals**: Tables wrapped in `border-border/60 bg-card overflow-hidden rounded-xl border shadow-xs`, with `bg-muted/40` header and `hover:bg-muted/30` rows.
+- [ ] **Stats & Numbers**: Metric numbers use `tabular-nums` for clean digit alignment.
