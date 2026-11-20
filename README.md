@@ -57,7 +57,7 @@ npx skills use 0necontroller/skills@dashboard-ui
 
 | Skill | Description | Path | Status |
 | :--- | :--- | :--- | :--- |
-| **`dashboard-ui`** | Guidelines, design system patterns, and responsive component architectures for crafting modern dashboard user interfaces. | `skills/dashboard-ui/` | ✅ Ready |
+| **`dashboard-ui`** | "Warm canvas" dashboard design system for React + Tailwind + shadcn/ui: theme tokens, a copy-paste component kit (panels, KPI strips, bar lists, segmented tabs, data tables, forms, settings), layout shell with breadcrumb navigation, and page recipes. | `skills/dashboard-ui/` | ✅ Ready |
 
 ---
 
@@ -70,7 +70,12 @@ This repository follows the standard multi-skill layout expected by `npx skills`
 ├── README.md
 ├── skills/
 │   └── dashboard-ui/
-│       └── SKILL.md
+│       ├── SKILL.md
+│       └── references/
+│           ├── theme.css
+│           ├── components.md
+│           ├── layout.md
+│           └── patterns.md
 └── (additional skills...)
 ```
 
