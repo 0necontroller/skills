@@ -58,6 +58,7 @@ npx skills use 0necontroller/skills@dashboard-ui
 | Skill | Description | Path | Status |
 | :--- | :--- | :--- | :--- |
 | **`dashboard-ui`** | "Warm canvas" dashboard design system for React + Tailwind + shadcn/ui: theme tokens, a copy-paste component kit (panels, KPI strips, bar lists, segmented tabs, data tables, forms, settings), layout shell with breadcrumb navigation, and page recipes. | `skills/dashboard-ui/` | ✅ Ready |
+| **`kitten-local-tts`** | Local, offline text-to-speech with Kitten TTS 2 Mini (CPU/ONNX, 16 languages): one-clip CLI, per-segment clips with durations, and narration mixed onto screen recordings with ffmpeg. | `skills/kitten-local-tts/` | ✅ Ready |
 
 ---
 
@@ -69,13 +70,18 @@ This repository follows the standard multi-skill layout expected by `npx skills`
 0necontroller/skills/
 ├── README.md
 ├── skills/
-│   └── dashboard-ui/
+│   ├── dashboard-ui/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── theme.css
+│   │       ├── components.md
+│   │       ├── layout.md
+│   │       └── patterns.md
+│   └── kitten-local-tts/
 │       ├── SKILL.md
-│       └── references/
-│           ├── theme.css
-│           ├── components.md
-│           ├── layout.md
-│           └── patterns.md
+│       └── scripts/
+│           ├── speak.py
+│           └── mix_narration.py
 └── (additional skills...)
 ```
 
